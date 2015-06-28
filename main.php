@@ -75,7 +75,7 @@ function sendEmail($to, $subject, $body) {
         try {
             $result = $client->sendEmail($email);
             return [
-                'messageId' => $result->get('MessageId')
+                'error' => false
             ];
         } catch (Aws\Ses\Exception\SesException $e) {
             $errorCode = $e->getAwsErrorCode();
