@@ -1,8 +1,10 @@
 <?php
 
 require_once __DIR__.'/../vendor/autoload.php';
-require_once __DIR__.'/config.php';
 
+// docs.aws.amazon.com/aws-sdk-php/v3/guide/guide/credentials.html
+require_once __DIR__.'/config.php';
+// In config.php, simply define AWS_CREDENTIALS_KEY and AWS_CREDENTIALS_SECRET
 $client = new Aws\Ses\SesClient([
     'version' => 'latest',
     'region'  => 'us-west-2',
@@ -12,6 +14,7 @@ $client = new Aws\Ses\SesClient([
     ]
 ]);
 
+// docs.aws.amazon.com/ses/latest/APIReference/API_GetSendQuota.html
 function getSendQuota() {
     global $client;
     try {
@@ -33,14 +36,16 @@ function getSendQuota() {
     }
 }
 
-/* Exponential backoff. */
-define('MIN_SLEEP_SECONDS', 1); /* 1 second. */
-define('MAX_SLEEP_SECONDS', 600); /* 10 minutes. */
+// A slight modification of sesblog.amazon.com/post/TxKR75VKOYDS60
+define('MIN_SLEEP_SECONDS', 1);
+define('MAX_SLEEP_SECONDS', 600);
 function getSleepDuration($currentTry) {
+    // Exponential backoff.
     $currentSleep = MIN_SLEEP_MICROS * pow(2, $currentTry);
     return min($currentSleep, MAX_SLEEP_MICROS);
 }
 
+// docs.aws.amazon.com/ses/latest/APIReference/API_SendEmail.html
 function buildEmailFormat($to, $subject, $body) {
     return [
         'Destination' => [
@@ -63,9 +68,9 @@ function buildEmailFormat($to, $subject, $body) {
         'ReturnPath' => 'wwwild<hello@wwwild.com>',
         'Source' => 'wwwild<hello@wwwild.com>',
     ];
-
 }
 
+// A slight modification of sesblog.amazon.com/post/TxKR75VKOYDS60
 define('MAX_RETRIES', 10);
 function sendEmail($to, $subject, $body) {
     global $client;
@@ -99,7 +104,6 @@ function sendEmail($to, $subject, $body) {
         }
         $numRetries--;
     }
-
     return [
         'error' => 'FAILURE_TO_SEND'
     ];
