@@ -46,7 +46,19 @@ function getSleepDuration($currentTry) {
 }
 
 // docs.aws.amazon.com/ses/latest/APIReference/API_SendEmail.html
-function buildEmailFormat($to, $subject, $body) {
+function buildEmailFormat($to, $subject, $textBody, $htmlBody='') {
+    $emailBody = [
+        'Text' => [
+            'Charset' => 'UTF-8',
+            'Data' => $textBody
+        ]
+    ];
+    if ($htmlBody !== '') {
+        $emailBody['Html'] = [
+            'Charset' => 'UTF-8',
+            'Data' => $htmlBody
+        ];
+    }
     return [
         'Destination' => [
             // Amazon recommends one call to sendEmail per recipient.
@@ -57,12 +69,7 @@ function buildEmailFormat($to, $subject, $body) {
                 'Charset' => 'UTF-8',
                 'Data' => $subject
             ],
-            'Body' => [
-                'Text' => [
-                    'Charset' => 'UTF-8',
-                    'Data' => $body
-                ]
-            ]
+            'Body' => $emailBody
         ],
         'ReplyToAddresses.member.N' => array('wwwild<hello@wwwild.com>'),
         'ReturnPath' => 'wwwild<hello@wwwild.com>',
@@ -72,9 +79,9 @@ function buildEmailFormat($to, $subject, $body) {
 
 // A slight modification of sesblog.amazon.com/post/TxKR75VKOYDS60
 define('MAX_RETRIES', 10);
-function sendEmail($to, $subject, $body) {
+function sendEmail($to, $subject, $textBody, $htmlBody='') {
     global $client;
-    $email = buildEmailFormat($to, $subject, $body);
+    $email = buildEmailFormat($to, $subject, $textBody, $htmlBody);
     $numRetries = MAX_RETRIES;
     while ($numRetries > 0) {
         try {
